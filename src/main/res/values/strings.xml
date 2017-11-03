@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">Parkeo</string>
+    <string name="title_activity_maps">Map</string>
+    <string name="google_direction_api">AIzaSyDIqhTRh9BNfLLzc_Xz37Mztxl006o7LJ8</string>
+
+
+</resources>

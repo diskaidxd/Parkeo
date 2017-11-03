@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "300483563868",
+    "firebase_url": "https://parkeo-bb59b.firebaseio.com",
+    "project_id": "parkeo-bb59b",
+    "storage_bucket": "parkeo-bb59b.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:300483563868:android:9216c26cd9e1a40e",
+        "android_client_info": {
+          "package_name": "parkeameya.com.parkeo"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "300483563868-65rruljj6h3j2ffg4m61l2sceu053ki3.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "parkeameya.com.parkeo",
+            "certificate_hash": "9a10ea5c6f1abc93e954490e40117e0b971351e4"
+          }
+        },
+        {
+          "client_id": "300483563868-qrthed46spe823nbem6hge1v4eelld6a.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDaFcGqRGgD_H0SoDxRusdPsjS80uDH7uU"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "300483563868-qrthed46spe823nbem6hge1v4eelld6a.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
