@@ -9,23 +9,32 @@
         <LinearLayout
             android:orientation="horizontal"
             android:id="@+id/layout_panel"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content">
 
-            <EditText
+       <!--     <EditText
                 android:layout_margin="10dp"
                 android:layout_weight="5"
                 android:id="@+id/edtPlace"
                 android:hint="ingrese la ubicación del lugar"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content" />
-            <Button
+                android:layout_height="wrap_content" />  -->
+            <fragment
+                android:id="@+id/place_autocomplete_fragment"
+                android:name="com.google.android.gms.location.places.ui.PlaceAutocompleteFragment"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="10dp"
+                android:layout_weight="5" />
+
+
+       <!--     <Button
                 android:id="@+id/btnGo"
                 android:text="Go"
                 android:layout_weight="1"
                 android:layout_marginTop="10dp"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content" />
+                android:layout_height="wrap_content" /> -->
 
         </LinearLayout>
         <fragment

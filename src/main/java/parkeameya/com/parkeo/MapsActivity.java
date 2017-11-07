@@ -10,6 +10,7 @@ import android.location.Location;
 import com.firebase.geofire.GeoLocation;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesUtil;
+import com.google.android.gms.common.api.Status;
 import com.google.android.gms.fitness.data.Value;
 import com.google.android.gms.location.LocationListener;
 
@@ -40,6 +41,10 @@ import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.LocationListener;
+import com.google.android.gms.location.places.Place;
+import com.google.android.gms.location.places.ui.PlaceAutocomplete;
+import com.google.android.gms.location.places.ui.PlaceAutocompleteFragment;
+import com.google.android.gms.location.places.ui.PlaceSelectionListener;
 import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -104,14 +109,17 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     //car animation
     private List<LatLng> polyLineList;
+
+  //  private Marker pickupLocationMarker;
     private Marker carMarker;
     private float v;
     private double lat, lng;
     private Handler handler;
-    private LatLng starPosition, endPosition, currentPosition;
+    private LatLng startPostion, endPosition, currentPosition;
     private int index, next;
-    private Button btnGo;
-    private EditText edtPlace;
+   // private Button btnGo;
+  //  private EditText edtPlace;
+    private PlaceAutocompleteFragment places;
     private String destination;
     private PolylineOptions polylineOptions, blackPolylineOptions;
     private Polyline blackPolyline, greyPolyline;
@@ -121,35 +129,35 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     Runnable drawPathRunnable = new Runnable() {
         @Override
         public void run() {
-            if (index < polyLineList.size() - 1) {
+            if (index < polyLineList.size()- 1)
+            {
                 index++;
-                next = index + 1;
+                next = index+1;
             }
-            if (index < polyLineList.size() - 1) {
-                starPosition = polyLineList.get(index);
+            if (index < polyLineList.size()- 1)
+            {
+                startPostion = polyLineList.get(index);
                 endPosition = polyLineList.get(next);
             }
-            ValueAnimator valueAnimator = ValueAnimator.ofFloat(0, 1);
+            ValueAnimator valueAnimator = ValueAnimator.ofFloat(0,1);
             valueAnimator.setDuration(3000);
             valueAnimator.setInterpolator(new LinearInterpolator());
             valueAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
                 @Override
                 public void onAnimationUpdate(ValueAnimator valueAnimator) {
                     v = valueAnimator.getAnimatedFraction();
-                    lng = v * endPosition.longitude + (1 - v) * starPosition.longitude;
-                    lat = v * endPosition.latitude + (1 - v) * starPosition.longitude;
-                    LatLng newPos = new LatLng(lat, lng);
+                    lng = v*endPosition.longitude+(1-v)*startPostion.longitude;
+                    lat = v*endPosition.latitude+(1-v)*startPostion.latitude;
+                    LatLng newPos = new LatLng(lat,lng);
                     carMarker.setPosition(newPos);
-                    carMarker.setAnchor(0.5f, 0.5f);
-                    carMarker.setRotation(getBearing(starPosition, newPos));
+                    carMarker.setAnchor(0.5f,0.5f);
+                    carMarker.setRotation(getBearing(startPostion,newPos));
                     mMap.moveCamera(CameraUpdateFactory.newCameraPosition(
                             new CameraPosition.Builder()
                                     .target(newPos)
                                     .zoom(15.5f)
                                     .build()
                     ));
-
-
                 }
             });
             valueAnimator.start();
@@ -157,19 +165,19 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         }
     };
 
-    private float getBearing(LatLng starPosition, LatLng endPosition) {
+    private float getBearing(LatLng startPostion, LatLng endPosition) {
 
-        double lat= Math.abs(starPosition.latitude -endPosition.latitude );
-        double lng= Math.abs(starPosition.longitude -endPosition.longitude);
+        double lat= Math.abs(startPostion.latitude - endPosition.latitude );
+        double lng= Math.abs(startPostion.longitude - endPosition.longitude);
         //posi
-        if(starPosition.latitude<endPosition.latitude && starPosition.longitude < endPosition.longitude)
+        if(startPostion.latitude < endPosition.latitude && startPostion.longitude < endPosition.longitude)
             return (float)(Math.toDegrees(Math.atan(lng/lat)));
-        else  if (starPosition.latitude>= endPosition.latitude && starPosition.longitude <endPosition.longitude)
+        else  if (startPostion.latitude >= endPosition.latitude && startPostion.longitude < endPosition.longitude)
             return  (float)((90-Math.toDegrees(Math.atan(lng/lat)))+90);
-        else if (starPosition.latitude >= endPosition.latitude && starPosition.longitude>=endPosition.longitude)
+        else if (startPostion.latitude >= endPosition.latitude && startPostion.longitude >= endPosition.longitude)
             return (float)(Math.toDegrees(Math.atan(lng/lat))+180);
-        else if (starPosition.latitude < endPosition.latitude && starPosition.latitude>=endPosition.longitude)
-            return (float)(90- Math.toDegrees(Math.atan(lng/lat))+270);
+        else if (startPostion.latitude < endPosition.latitude && startPostion.latitude >= endPosition.longitude)
+            return (float)((90-Math.toDegrees(Math.atan(lng/lat)))+270);
         return -1;
     }
 
@@ -191,24 +199,49 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 if (isOnline) {
                     startLocationUpdates();
                     displayLocation();
-                    Snackbar.make(mapFragment.getView(), "You are online", Snackbar.LENGTH_SHORT)
+                    Snackbar.make(mapFragment.getView(), "Estás en línea", Snackbar.LENGTH_SHORT)
                             .show();
-                } else {
+                } else
+                    {
                     stopLocationUpdates();
                     mCurrent.remove();
                     mMap.clear();
                     handler.removeCallbacks(drawPathRunnable);
-                    Snackbar.make(mapFragment.getView(), "You are offline", Snackbar.LENGTH_SHORT)
+                    Snackbar.make(mapFragment.getView(), "Estas desconectado", Snackbar.LENGTH_SHORT)
                             .show();
                 }
             }
         });
 
         polyLineList = new ArrayList<>();
-        btnGo = (Button)findViewById(R.id.btnGo);
-        edtPlace = (EditText)findViewById(R.id.edtPlace);
+      //  btnGo = (Button)findViewById(R.id.btnGo);
+     //   edtPlace = (EditText)findViewById(R.id.edtPlace);
 
-        btnGo.setOnClickListener(new View.OnClickListener() {
+        //Places API
+        places = (PlaceAutocompleteFragment) getFragmentManager().findFragmentById(R.id.place_autocomplete_fragment);
+        places.setOnPlaceSelectedListener(new PlaceSelectionListener() {
+            @Override
+            public void onPlaceSelected(Place place) {
+                if (location_switch.isChecked())
+                {
+                    destination = place.getAddress().toString();
+                    destination = destination.replace("", "+");
+
+                    getDirection();
+                }
+                else{
+                    Toast.makeText(MapsActivity.this, "Por favor cambie su estado a ONLINE", Toast.LENGTH_SHORT).show();
+                }
+
+            }
+
+            @Override
+            public void onError(Status status) {
+                Toast.makeText(MapsActivity.this, ""+ status.toString(), Toast.LENGTH_SHORT).show();
+
+            }
+        });
+     /*   btnGo.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 destination = edtPlace.getText().toString();
@@ -218,8 +251,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 getDirection();
 
             }
-        });
-        //Geo Fire
+        }); */
+ //guarda en la firebase       //Geo Fire
         drivers = FirebaseDatabase.getInstance().getReference("Drivers");
         geoFire = new GeoFire(drivers);
 
@@ -230,13 +263,13 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     private void getDirection() {
         currentPosition = new LatLng(mLastLocation.getLatitude(),mLastLocation.getLongitude());
-
+        //String r
         String requestApi = null;
         try{
             requestApi = "https://maps.googleapis.com/maps/api/directions/json?"+
                     "mode=driving&"+
                     "transit_routing_preference=less_driving&"+
-                    "origin"+currentPosition.latitude+","+currentPosition.longitude+"&"+
+                    "origin="+currentPosition.latitude+","+currentPosition.longitude+"&"+
                     "destination="+destination+"&"+
                     "key="+getResources().getString(R.string.google_direction_api);
             Log.d("EDMTDEV",requestApi); //print URL for debug
@@ -279,11 +312,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                                 blackPolylineOptions.endCap(new SquareCap());
                                 blackPolylineOptions.jointType(JointType.ROUND);
 
-                                greyPolyline = mMap.addPolyline(polylineOptions);
+                                blackPolyline = mMap.addPolyline(blackPolylineOptions);
 
                                 mMap.addMarker(new MarkerOptions()
                                         .position(polyLineList.get(polyLineList.size()-1))
-                                        .title("pickup Location"));
+                                        .title("lugar de recogida"));
 
                                 //Animation
 
@@ -306,10 +339,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
                                 carMarker = mMap.addMarker(new MarkerOptions().position(currentPosition)
                                 .flat(true)
-                                .icon(BitmapDescriptorFactory.fromResource(R.drawable.car)));
+      /*carrito negro*/         .icon(BitmapDescriptorFactory.fromResource(R.drawable.car)));
 
                                 handler = new Handler();
                                 index=-1;
+                                next= 1;
                                 handler.postDelayed(drawPathRunnable,3000);
 
                             } catch (JSONException e) {
@@ -373,11 +407,14 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults)
         {
-            switch (requestCode) {
+            switch (requestCode)
+            {
                 case MY_PERMISSION_REQUEST_CODE:
-                    if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                        if (checkPlayServices()) {
-                            buildGoogleApiclient();
+                    if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED)
+                    {
+                        if (checkPlayServices())
+                        {
+                            buildGoogleApiClient();
                             createLocationRequest();
                             if (location_switch.isChecked())
                                 displayLocation();
@@ -388,16 +425,19 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
 
     private void setUpLocation() {
+
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
-                ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED)
+        {
             //Request runtime permission
             ActivityCompat.requestPermissions(this, new String[]{
                     Manifest.permission.ACCESS_COARSE_LOCATION,
                     Manifest.permission.ACCESS_FINE_LOCATION
             }, MY_PERMISSION_REQUEST_CODE);
         } else {
-            if (checkPlayServices()) {
-                buildGoogleApiclient();
+            if (checkPlayServices())
+            {
+                buildGoogleApiClient();
                 createLocationRequest();
                 if (location_switch.isChecked())
                     displayLocation();
@@ -413,7 +453,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mLocationRequest.setSmallestDisplacement(DISPLACEMENT);
     }
 
-    private void buildGoogleApiclient() {
+    private void buildGoogleApiClient() {
         mGoogleApiClient = new GoogleApiClient.Builder(this)
                 .addConnectionCallbacks(this)
                 .addOnConnectionFailedListener(this)
@@ -430,7 +470,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             if (GooglePlayServicesUtil.isUserRecoverableError(resultCode))
                 GooglePlayServicesUtil.getErrorDialog(resultCode, this, PLAY_SERVICE_RES_REQUEST).show();
             else {
-                Toast.makeText(this, "this device is not supported", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "este dispositivo no es compatible", Toast.LENGTH_SHORT).show();
                 finish();
             }
             return false;
@@ -440,7 +480,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     private void stopLocationUpdates() {
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
-                ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED)
+        {
             return;
         }
         LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient, this);
@@ -448,12 +489,15 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     private void displayLocation() {
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
-                ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED)
+        {
             return;
         }
         mLastLocation = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
-        if (mLastLocation != null) {
-            if (location_switch.isChecked()) {
+        if (mLastLocation != null)
+        {
+            if (location_switch.isChecked())
+            {
                 final double latitude = mLastLocation.getLatitude();
                 final double longitude = mLastLocation.getLongitude();
 
@@ -463,16 +507,17 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     public void onComplete(String key, DatabaseError error) {
                         //Add Marker
                         if (mCurrent != null)
-                            mCurrent.remove(); //remove alreadi marker
+                            mCurrent.remove(); //remove already marker
                         mCurrent = mMap.addMarker(new MarkerOptions()
                                 .icon(BitmapDescriptorFactory.fromResource(R.drawable.car))
                                 .position(new LatLng(latitude, longitude))
-                                .title("tu ubicacion"));
+                                .title(""));
 
                         //Move camera to this position
                         mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(latitude, longitude), 15.0f));
 
-
+                        //Draw animation rotate marker
+               //         rotateMarker(mCurrent,-360,mMap);
                     }
                 });
             }
@@ -495,7 +540,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             @Override
             public void run() {
                 long elapsed = SystemClock.uptimeMillis() - start;
-                float t = interpolator.getInterpolation((float) elapsed / duration);
+                float t = interpolator.getInterpolation((float)elapsed/duration);
                 float rot = t * i + (1 - t) * startRotation;
                 mCurrent.setRotation(-rot > 180 ? rot / 2 : rot);
                 if (t < 1.0) {
@@ -538,7 +583,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     @Override
     public void onConnectionSuspended(int i) {
         mGoogleApiClient.connect();
-
     }
 
     @Override
@@ -553,7 +597,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     }
 
-    public void John(GoogleMap googleMap) {
+     public void John(GoogleMap googleMap) {
         mMap = googleMap;
 
 
@@ -568,23 +612,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
          mMap.addMarker(new MarkerOptions().position(punto1).title("Cochera1"));
 
 
-       /* googleMap.addMarker(new MarkerOptions()
-                .position(LatLng)
-                .title("My Spot")
-                .snippet("This is my spot!")
-                .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE)));*/
 
 
-        /* mMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
-            @Override
-            public boolean onMarkerClick(Marker marker) {
-                Toast.makeText(MapsActivity.this, "cocheraa", Toast.LENGTH_SHORT).show();
-
-                return false;
-            }
 
 
-        }); */
         mMap.addMarker(new MarkerOptions().position(punto2).title("Cochera2"));
         mMap.addMarker(new MarkerOptions().position(punto3).title("Cochera3"));
         mMap.addMarker(new MarkerOptions().position(punto4).title("Cochera4"));
@@ -593,48 +624,20 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mMap.addMarker(new MarkerOptions().position(punto7).title("Cochera7"));
         mMap.addMarker(new MarkerOptions().position(punto8).title("Cochera8"));
 
+        //me manda  a otra interfaz
+        mMap.setOnInfoWindowClickListener(new GoogleMap.OnInfoWindowClickListener() {
+            @Override
+            public void onInfoWindowClick(Marker marker) {
+                Intent intent = new Intent(MapsActivity.this,OtherActivity.class);
+                startActivity(intent);
 
 
-
-    }
-
-    final LatLng punto1 = new LatLng(-12.0580334, -77.0793496);
-    final LatLng punto2 = new LatLng(-12.056377, -77.079175);
-    final LatLng punto3 = new LatLng(-12.059199, -77.078070);
-    final LatLng punto4 = new LatLng(-12.060678, -77.080420);
-    final LatLng punto5 = new LatLng(-12.058255, -77.078971);
-    final LatLng punto6 = new LatLng(-12.055212, -77.080720);
-    final LatLng punto7 = new LatLng(-12.055139, -77.079476);
-    final LatLng punto8 = new LatLng(-12.055076, -77.081836);
-
-    public class MarkerDemoActivity extends android.support.v4.app.FragmentActivity
-            implements GoogleMap.OnMarkerClickListener {
-        private Marker myMarker;
-
-        private void setUpMap() {
-
-            mMap.setOnMarkerClickListener(this);
-
-            myMarker = mMap.addMarker(new MarkerOptions()
-                    .position(punto2 )
-                    .title("My Spot")
-                    .snippet("This is my spot!")
-                    .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE)));
-
-        }
-
-        @Override
-        public boolean onMarkerClick(final Marker marker) {
-
-            if (marker.equals(myMarker))
-            {
-                //handle click here
-                //pasar a otra actividad con Intent
-                startActivity(new Intent(MapsActivity.this, MainActivity.class));
-                finish();
             }
-            return false;
-        }
+        });
+
+
+
 
     }
+
 }

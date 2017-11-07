@@ -135,10 +135,11 @@ public class MainActivity extends AppCompatActivity {
                             return;
                         }
                         if (edtPassword.getText().toString().length() < 6) {
-                            Snackbar.make(rootLayout, "Contraseña muyr corta !!", Snackbar.LENGTH_SHORT)
+                            Snackbar.make(rootLayout, "Contraseña muy corta !!", Snackbar.LENGTH_SHORT)
                                     .show();
                             return;
                         }
+
 ///--------------                         //min 3:20 a 3:40
                         final SpotsDialog waitingDialog = new SpotsDialog(MainActivity.this);
                         waitingDialog.show();
@@ -212,6 +213,12 @@ public class MainActivity extends AppCompatActivity {
                 if(TextUtils.isEmpty(edtPhone.getText().toString()))
                 {
                     Snackbar.make(rootLayout,"Porfavor ingrese su numero",Snackbar.LENGTH_SHORT)
+                            .show();
+                    return;
+                }
+                if(edtPhone.getText().toString().length()<6)
+                {
+                    Snackbar.make(rootLayout,"Ingrese un numero real !!",Snackbar.LENGTH_SHORT)
                             .show();
                     return;
                 }
